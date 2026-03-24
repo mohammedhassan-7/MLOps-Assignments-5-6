@@ -1,5 +1,9 @@
+
 .env
-data/
+# Ignore all data contents except DVC pointer files and .gitignore
+data/*
+!data/**/*.dvc
+!data/**/.gitignore
 
 # Python cache/build artifacts
 __pycache__/

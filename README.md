@@ -28,12 +28,20 @@ export MLFLOW_TRACKING_URI=your_mlflow_tracking_uri
 python train.py
 ```
 
+
 ### 4. Running the Pipeline on GitHub Actions
 - Push to `main` branch triggers the workflow
 - Set the following repository secrets:
   - `KAGGLE_USERNAME`
   - `KAGGLE_KEY`
   - `MLFLOW_TRACKING_URI`
+  - `GDRIVE_CREDENTIALS_JSON` (contents of your Google service account JSON for DVC Google Drive remote)
+
+**How to get `GDRIVE_CREDENTIALS_JSON`:**
+1. Create a Google Cloud service account (no role needed).
+2. Download the JSON key file.
+3. Share your Google Drive DVC folder with the service account email (Editor access).
+4. In your GitHub repo, go to Settings → Secrets and add a new secret named `GDRIVE_CREDENTIALS_JSON` with the full contents of the JSON file.
 
 ### 5. Files
 - `train.py` — Trains and logs the model

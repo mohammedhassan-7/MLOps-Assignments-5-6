@@ -43,12 +43,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # Pull data
-      - name: Pull dataset with DVC
+      # dvc pull 
+      # Set up Google Drive credentials for DVC
+      - name: Write GDrive service account JSON
+        run: echo "${{ secrets.GDRIVE_CREDENTIALS_JSON }}" > gdrive-creds.json
+
+      # Pull dataset with DVC from Google Drive
+      - name: DVC Pull
         env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: dvc pull
+          GDRIVE_SERVICE_ACCOUNT_JSON_FILE_PATH: ${{ github.workspace }}/gdrive-creds.json
+        run: |
+          pip install dvc dvc-gdrive --quiet
+          dvc pull
 
       # Train model
       - name: Train model
