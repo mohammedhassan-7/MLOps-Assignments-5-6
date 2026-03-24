@@ -18,49 +18,20 @@ mlflow.set_experiment("MLOps Assignment 5 - Full CI/CD pipeline")
 mlflow.config.enable_system_metrics_logging()
 mlflow.config.set_system_metrics_sampling_interval(1)
 
-
-def download_dataset():
-    """Downloads and unzips the RealWaste dataset using Kaggle API."""
-    # Import after load_dotenv so Kaggle reads credentials from environment.
-    import kaggle
-
-    dataset_name = "joebeachcapital/realwaste"
-    data_dir = "./data"
-
-    # Common extraction layouts seen from Kaggle / unzip on different platforms.
-    candidate_paths = [
-        os.path.join(data_dir, "RealWaste"),
-        os.path.join(data_dir, "realwaste", "RealWaste"),
-        os.path.join(data_dir, "realwaste-main", "RealWaste"),
-    ]
-
-    if not any(os.path.isdir(path) for path in candidate_paths):
-        print(f"Downloading {dataset_name} from Kaggle...")
-        kaggle.api.dataset_download_cli(dataset_name, unzip=True, path=data_dir)
-
-    for path in candidate_paths:
-        if os.path.isdir(path):
-            print(f"Using dataset directory: {path}")
-            return path
-
-    available_entries = []
-    if os.path.isdir(data_dir):
-        available_entries = os.listdir(data_dir)
-
-    raise FileNotFoundError(
-        "Could not locate RealWaste dataset directory after download. "
-        f"Checked: {candidate_paths}. Found entries in {data_dir}: {available_entries}"
-    )
+# Use DVC-downloaded dataset path
+DATASET_PATH = "data/realwaste-main/RealWaste"
 
 
 def main():
+
     # Start MLflow tracking
     with mlflow.start_run() as run:
         run_id = run.info.run_id
         print(f"Started MLflow Run: {run_id}")
 
-        # Prepare Data
-        data_path = download_dataset()
+        # Use DVC-downloaded dataset
+        data_path = DATASET_PATH
+        print(f"Using DVC-downloaded dataset at: {data_path}")
 
         transform = transforms.Compose([
             transforms.Resize((224, 224)),
