@@ -4,6 +4,10 @@
 data/*
 !data/**/*.dvc
 !data/**/.gitignore
+!data/realwaste-main/RealWaste.dvc
+
+# DVC Google Drive credentials
+gdrive-creds.json
 
 # Python cache/build artifacts
 __pycache__/
