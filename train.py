@@ -1,5 +1,6 @@
 import os
 import tempfile
+from pathlib import Path
 import torch
 import torch.nn as nn
 import mlflow
@@ -18,8 +19,25 @@ mlflow.set_experiment("MLOps Assignment 5 - Full CI/CD pipeline")
 mlflow.config.enable_system_metrics_logging()
 mlflow.config.set_system_metrics_sampling_interval(1)
 
-# Use DVC-downloaded dataset path
-DATASET_PATH = "data/realwaste-main/RealWaste"
+# Candidate dataset paths for local and CI layouts.
+DATASET_CANDIDATES = [
+    "data/realwaste-main/RealWaste",
+    "RealWaste",
+]
+
+
+def resolve_dataset_path() -> str:
+    repo_root = Path(__file__).resolve().parent
+    for relative_path in DATASET_CANDIDATES:
+        candidate = repo_root / relative_path
+        if candidate.is_dir():
+            return str(candidate)
+
+    checked = ", ".join(str((repo_root / p)) for p in DATASET_CANDIDATES)
+    raise FileNotFoundError(
+        "Dataset folder not found. Checked: "
+        f"{checked}. Run 'dvc pull' and ensure one of these paths exists."
+    )
 
 
 def main():
@@ -29,8 +47,8 @@ def main():
         run_id = run.info.run_id
         print(f"Started MLflow Run: {run_id}")
 
-        # Use DVC-downloaded dataset
-        data_path = DATASET_PATH
+        # Resolve DVC-downloaded dataset location.
+        data_path = resolve_dataset_path()
         print(f"Using DVC-downloaded dataset at: {data_path}")
 
         transform = transforms.Compose([
