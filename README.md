@@ -1,5 +1,8 @@
 # MLflow CI/CD Pipeline Assignment
 
+
+**Dataset:** [RealWaste on Kaggle](https://www.kaggle.com/datasets/joebeachcapital/realwaste/data)
+
 This repository contains a complete CI/CD pipeline for training, validating, and (mock) deploying a PyTorch image classifier using MLflow, DVC, Docker, and GitHub Actions.
 
 ## Features
@@ -34,12 +37,6 @@ python train.py
 - Set the following repository secrets:
   - `MLFLOW_TRACKING_URI`
   - `GDRIVE_CREDENTIALS_JSON` (contents of your Google service account JSON for DVC Google Drive remote)
-
-**How to get `GDRIVE_CREDENTIALS_JSON`:**
-1. Create a Google Cloud service account (no role needed).
-2. Download the JSON key file.
-3. Share your Google Drive DVC folder with the service account email (Editor access).
-4. In your GitHub repo, go to Settings → Secrets and add a new secret named `GDRIVE_CREDENTIALS_JSON` with the full contents of the JSON file.
 
 ### 5. Files
 - `train.py` — Trains and logs the model

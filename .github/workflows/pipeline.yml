@@ -46,7 +46,7 @@ jobs:
       # dvc pull 
       # Set up Google Drive credentials for DVC
       - name: Write GDrive service account JSON
-        run: echo "${{ secrets.GDRIVE_CREDENTIALS_JSON }}" > gdrive-creds.json
+        run: echo "${{ secrets.GDRIVE_CREDENTIALS_JSON }}" > .dvc/gdrive-creds.json
 
       # Pull dataset with DVC from Google Drive
       - name: DVC Pull
