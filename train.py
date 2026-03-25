@@ -79,7 +79,7 @@ def main():
 
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        num_epochs = 1
+        num_epochs = 5
         mlflow.log_param("epochs", num_epochs)
 
         # Train Model
