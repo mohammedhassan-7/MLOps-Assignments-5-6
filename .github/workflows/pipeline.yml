@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate:
-    name: Train & Validate Model
+  lint:
+    name: Lint Code (Gatekeeper)
     runs-on: ubuntu-latest
     steps:
 
@@ -23,16 +23,45 @@ jobs:
         with:
           python-version: "3.10"
 
-      # Install dependencies and linter
-      - name: Install dependencies
+      # Install only linter for a lightweight gate
+      - name: Install flake8
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pip install flake8
 
       # Lint code
       - name: Lint with flake8
         run: flake8 .
+
+  train:
+    name: Train & Validate Model
+    runs-on: ubuntu-latest
+    needs: lint
+    if: >-
+      needs.lint.result == 'success' &&
+      github.ref == 'refs/heads/main' &&
+      (
+        contains(github.event.head_commit.message, '[run-train]') ||
+        contains(github.event.pull_request.title, '[run-train]') ||
+        contains(github.event.pull_request.body, '[run-train]')
+      )
+    steps:
+
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Python setup
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       # Cache pip
       - name: Cache pip dependencies
@@ -43,18 +72,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # dvc pull 
+      # dvc pull
       # Set up Google Drive credentials for DVC
       - name: Write GDrive service account JSON
         run: |
           mkdir -p .dvc
           printf '%s' '${{ secrets.GDRIVE_CREDENTIALS_JSON }}' > .dvc/gdrive-creds.json
           chmod 600 .dvc/gdrive-creds.json
-        
+
       - name: Verify credentials file
         run: |
-         echo "File exists: $(ls -la .dvc/gdrive-creds.json)"
-         echo "Valid JSON: $(python -c 'import json; json.load(open(".dvc/gdrive-creds.json")); print("YES")')"
+          echo "File exists: $(ls -la .dvc/gdrive-creds.json)"
+          echo "Valid JSON: $(python -c 'import json; json.load(open(".dvc/gdrive-creds.json")); print("YES")')"
 
       # Pull dataset with DVC from Google Drive
       - name: DVC Pull
@@ -68,7 +97,9 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: python train.py
+        run: |
+          set -o pipefail
+          python train.py 2>&1 | tee train.log
 
       # Check artifact
       - name: Verify model_info.txt exists
@@ -87,10 +118,39 @@ jobs:
           path: model_info.txt
           retention-days: 7
 
+      # Save logs if training fails
+      - name: Create error logs
+        if: failure()
+        run: |
+          {
+            echo "Training job failed"
+            echo "Repository: ${{ github.repository }}"
+            echo "Run ID: ${{ github.run_id }}"
+            echo "SHA: ${{ github.sha }}"
+            echo "Branch: ${{ github.ref }}"
+            echo "Commit message: ${{ github.event.head_commit.message }}"
+            echo
+            echo "===== tail train.log ====="
+            tail -n 200 train.log 2>/dev/null || echo "train.log not found"
+          } > error_logs.txt
+
+      - name: Upload error logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-error-logs
+          path: error_logs.txt
+          retention-days: 7
+
+      - name: Cleanup temporary resources
+        if: always()
+        run: echo "Cleaning up temporary cloud volumes..."
+
   deploy:
     name: Check Threshold & Deploy
     runs-on: ubuntu-latest
-    needs: validate
+    needs: train
+    if: needs.train.result == 'success'
     steps:
 
       # Checkout code
