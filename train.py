@@ -44,7 +44,7 @@ def main():
 
     # Start MLflow tracking
     with mlflow.start_run() as run:
-        run_id = run.info.run_id
+    run_id = run.info.run_id
         print(f"Started MLflow Run: {run_id}")
 
         # Resolve DVC-downloaded dataset location.
