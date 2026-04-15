@@ -21,8 +21,8 @@ mlflow.config.set_system_metrics_sampling_interval(1)
 
 # Candidate dataset paths for local and CI layouts.
 DATASET_CANDIDATES = [
-    "data/realwaste-main/RealWaste",
-    "RealWaste",
+    "data/nonexistent/RealWaste",
+    "FakeWaste",
 ]
 
 
@@ -44,7 +44,7 @@ def main():
 
     # Start MLflow tracking
     with mlflow.start_run() as run:
-    run_id = run.info.run_id
+        run_id = run.info.run_id
         print(f"Started MLflow Run: {run_id}")
 
         # Resolve DVC-downloaded dataset location.
@@ -120,8 +120,7 @@ def main():
             )
             mlflow.log_metric("train_loss", epoch_train_loss, step=epoch + 1)
             mlflow.log_metric("val_accuracy", epoch_accuracy, step=epoch + 1)
-
-        print(f"Final Accuracy: {accuracy:.4f}")
+        print(f"Final Accuracy: {accuracy:.3f}")
 
         # Log to MLflow
         mlflow.log_metric("accuracy", accuracy)
